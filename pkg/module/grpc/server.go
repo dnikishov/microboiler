@@ -25,9 +25,10 @@ type Options struct {
 
 type GRPCServerModule struct {
 	module.Base
-	server  *grpc.Server
-	options *Options
-	ctx     context.Context
+	server        *grpc.Server
+	options       *Options
+	ctx           context.Context
+	listenAddress string
 }
 
 func (p *GRPCServerModule) Init(ctx context.Context) error {
@@ -43,8 +44,13 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 	slog.Info("GRPC server module initialized")
 
 	p.registerServices()
+	p.listenAddress = listenAddress
 
-	return p.startServer(listenAddress)
+	return nil
+}
+
+func (p *GRPCServerModule) Main(_ context.Context) error {
+	return p.startServer()
 }
 
 func (p *GRPCServerModule) Cleanup(_ context.Context) {
@@ -52,10 +58,10 @@ func (p *GRPCServerModule) Cleanup(_ context.Context) {
 	p.server.Stop()
 }
 
-func (p *GRPCServerModule) startServer(listenAddress string) error {
+func (p *GRPCServerModule) startServer() error {
 	serveErrorCh := make(chan error)
 
-	go p.doServe(listenAddress, serveErrorCh)
+	go p.doServe(serveErrorCh)
 
 	select {
 	case err := <-serveErrorCh:
@@ -67,10 +73,10 @@ func (p *GRPCServerModule) startServer(listenAddress string) error {
 	}
 }
 
-func (p *GRPCServerModule) doServe(listenAddress string, serveErrorCh chan error) {
-	listener, err := net.Listen("tcp", listenAddress)
+func (p *GRPCServerModule) doServe(serveErrorCh chan error) {
+	listener, err := net.Listen("tcp", p.listenAddress)
 	if err != nil {
-		serveErrorCh <- errors.New(fmt.Sprintf("Could not initialize listener on %s: %s", listenAddress, err))
+		serveErrorCh <- errors.New(fmt.Sprintf("Could not initialize listener on %s: %s", p.listenAddress, err))
 	}
 	err = p.server.Serve(listener)
 	if err != nil {
