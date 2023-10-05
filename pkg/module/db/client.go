@@ -35,7 +35,7 @@ type GORMDatabaseModule struct {
 }
 
 func (p *GORMDatabaseModule) Init(_ context.Context) error {
-	dbConfig, err := loadConfigFromViper()
+	dbConfig, err := p.loadConfigFromViper()
 
 	if err != nil {
 		return err
@@ -62,27 +62,29 @@ func (p *GORMDatabaseModule) GetDB() *gorm.DB {
 	return p.db
 }
 
-func loadConfigFromViper() (*Config, error) {
-	host := viper.GetString("db.host")
-	dbName := viper.GetString("db.name")
-	username := viper.GetString("db.username")
-	password := viper.GetString("db.password")
-	options := viper.GetStringMapString("db.options")
+func (p *GORMDatabaseModule) loadConfigFromViper() (*Config, error) {
+	configPrefix := fmt.Sprintf("gorm-%s", p.GetName())
+
+	host := viper.GetString(fmt.Sprintf("%s.host", configPrefix))
+	dbName := viper.GetString(fmt.Sprintf("%s.name", configPrefix))
+	username := viper.GetString(fmt.Sprintf("%s.username", configPrefix))
+	password := viper.GetString(fmt.Sprintf("%s.password", configPrefix))
+	options := viper.GetStringMapString(fmt.Sprintf("%s.options", configPrefix))
 
 	if host == "" {
-		return nil, fmt.Errorf("DB config: DB hostname must be specified")
+		return nil, fmt.Errorf("Invalid configuration: %s.host is not set", configPrefix)
 	}
 
 	if dbName == "" {
-		return nil, fmt.Errorf("DB config: DB name must be specified")
+		return nil, fmt.Errorf("Invalid configuration: %s.dbName is not set", configPrefix)
 	}
 
 	if username == "" {
-		return nil, fmt.Errorf("DB config: username must be specified")
+		return nil, fmt.Errorf("Invalid configuration: %s.username is not set", configPrefix)
 	}
 
 	if password == "" {
-		return nil, fmt.Errorf("DB config: password must be specified")
+		return nil, fmt.Errorf("Invalid configuration: %s.password is not set", configPrefix)
 	}
 
 	return &Config{Host: host,

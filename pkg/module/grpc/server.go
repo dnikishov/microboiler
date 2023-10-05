@@ -30,10 +30,11 @@ type GRPCServerModule struct {
 }
 
 func (p *GRPCServerModule) Init(ctx context.Context) error {
-	listenAddress := viper.GetString("grpc.listenAddress")
+	configPrefix := fmt.Sprintf("grpc-%s", p.GetName())
+	listenAddress := viper.GetString(fmt.Sprintf("%s.listenAddress", configPrefix))
 
 	if listenAddress == "" {
-		return fmt.Errorf("GRPC: listenAddress must be specified")
+		return fmt.Errorf("Invalid configuration: %s.listenAddress is not set", configPrefix)
 	}
 
 	p.ctx = ctx
