@@ -54,7 +54,7 @@ func (p *GORMDatabaseModule) Init(_ context.Context) error {
 		migrationFunc(p.db)
 	}
 
-	slog.Info("GORM database module initialized")
+	slog.Info("GORM database module initialized", "name", p.GetName())
 
 	return nil
 }
@@ -103,6 +103,5 @@ func buildConnectionString(dbConfig *Config) string {
 }
 
 func NewGORMDatabaseModule(name string, options *Options) GORMDatabaseModule {
-	mName := fmt.Sprintf("GORM DB %s", name)
-	return GORMDatabaseModule{Base: module.Base{Name: mName, IncludesInit: true}, options: options}
+	return GORMDatabaseModule{Base: module.Base{Name: name, IncludesInit: true}, options: options}
 }
