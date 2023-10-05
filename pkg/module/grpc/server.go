@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 
@@ -33,7 +33,7 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 	listenAddress := viper.GetString("grpc.listenAddress")
 
 	if listenAddress == "" {
-		return errors.New("GRPC: listenAddress must be specified")
+		return fmt.Errorf("GRPC: listenAddress must be specified")
 	}
 
 	p.ctx = ctx
