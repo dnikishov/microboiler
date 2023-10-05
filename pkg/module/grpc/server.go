@@ -3,10 +3,8 @@ package grpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net"
-	"time"
 
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -41,7 +39,7 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 	p.ctx = ctx
 	p.server = grpc.NewServer()
 
-	slog.Info("GRPC server module initialized")
+	slog.Info("GRPC server initialized", "name", p.GetName())
 
 	p.registerServices()
 	p.listenAddress = listenAddress
@@ -50,40 +48,20 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 }
 
 func (p *GRPCServerModule) Main(_ context.Context) error {
-	return p.startServer()
-}
-
-func (p *GRPCServerModule) Cleanup(_ context.Context) {
-	slog.Info("Stopping GRPC server")
-	p.server.Stop()
-}
-
-func (p *GRPCServerModule) startServer() error {
-	serveErrorCh := make(chan error)
-
-	go p.doServe(serveErrorCh)
-
-	select {
-	case err := <-serveErrorCh:
-		return err
-
-	// probably sub-optimal but good enough at this point
-	case <-time.After(1 * time.Second):
-		return nil
-	}
-}
-
-func (p *GRPCServerModule) doServe(serveErrorCh chan error) {
 	listener, err := net.Listen("tcp", p.listenAddress)
 	if err != nil {
-		serveErrorCh <- errors.New(fmt.Sprintf("Could not initialize listener on %s: %s", p.listenAddress, err))
+		return err
 	}
 	err = p.server.Serve(listener)
 	if err != nil {
-		serveErrorCh <- errors.New(fmt.Sprintf("Could not start GRPC server: %s", err))
+		return err
 	}
+	return nil
+}
 
-	serveErrorCh <- nil
+func (p *GRPCServerModule) Cleanup(_ context.Context) {
+	slog.Info("Stopping GRPC server", "name", p.GetName())
+	p.server.Stop()
 }
 
 func (p *GRPCServerModule) registerServices() {
@@ -93,6 +71,5 @@ func (p *GRPCServerModule) registerServices() {
 }
 
 func NewGRPCServerModule(name string, options *Options) GRPCServerModule {
-	mName := fmt.Sprintf("GRPC server %s", name)
-	return GRPCServerModule{Base: module.Base{Name: mName, IncludesInit: true, IncludesCleanup: true}, options: options}
+	return GRPCServerModule{Base: module.Base{Name: name, IncludesInit: true, IncludesCleanup: true}, options: options}
 }
