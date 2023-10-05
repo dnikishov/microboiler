@@ -72,8 +72,18 @@ func doRun(cmd *cobra.Command, args []string) {
 
 	for i := range modules {
 		if modules[i].HasInit() {
+			err := modules[i].Init(ctx)
+			if err != nil {
+				slog.Error("Failed to initialize module", "name", modules[i].GetName(), "error", err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	for i := range modules {
+		if modules[i].HasMain() {
 			f := func() error {
-				return modules[i].Init(ctx)
+				return modules[i].Main(ctx)
 			}
 			errs.Go(f)
 			time.Sleep(1 * time.Second)
@@ -82,7 +92,7 @@ func doRun(cmd *cobra.Command, args []string) {
 
 	err = errs.Wait()
 	if err != nil {
-		slog.Error("Failed to initialize modules:", err)
+		slog.Error("Failed to run modules", "error", err)
 		os.Exit(1)
 	}
 
