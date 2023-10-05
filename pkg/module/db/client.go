@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -47,7 +46,7 @@ func (p *GORMDatabaseModule) Init(_ context.Context) error {
 	p.db, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to initialize DB module: %s", err))
+		return fmt.Errorf("Failed to initialize DB module: %s", err)
 	}
 
 	for _, migrationFunc := range p.options.Migrations {
@@ -71,19 +70,19 @@ func loadConfigFromViper() (*Config, error) {
 	options := viper.GetStringMapString("db.options")
 
 	if host == "" {
-		return nil, errors.New("DB config: DB hostname must be specified")
+		return nil, fmt.Errorf("DB config: DB hostname must be specified")
 	}
 
 	if dbName == "" {
-		return nil, errors.New("DB config: DB name must be specified")
+		return nil, fmt.Errorf("DB config: DB name must be specified")
 	}
 
 	if username == "" {
-		return nil, errors.New("DB config: username must be specified")
+		return nil, fmt.Errorf("DB config: username must be specified")
 	}
 
 	if password == "" {
-		return nil, errors.New("DB config: password must be specified")
+		return nil, fmt.Errorf("DB config: password must be specified")
 	}
 
 	return &Config{Host: host,
