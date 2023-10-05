@@ -11,6 +11,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/dnikishov/microboiler/pkg/module"
 )
 
 type MigrationFunc = func(db *gorm.DB)
@@ -28,11 +30,12 @@ type Options struct {
 }
 
 type GORMDatabaseModule struct {
+	module.Base
 	db      *gorm.DB
 	options *Options
 }
 
-func (p *GORMDatabaseModule) Start(_ context.Context) error {
+func (p *GORMDatabaseModule) Init(_ context.Context) error {
 	dbConfig, err := loadConfigFromViper()
 
 	if err != nil {
@@ -58,9 +61,6 @@ func (p *GORMDatabaseModule) Start(_ context.Context) error {
 
 func (p *GORMDatabaseModule) GetDB() *gorm.DB {
 	return p.db
-}
-
-func (p *GORMDatabaseModule) Cleanup() {
 }
 
 func loadConfigFromViper() (*Config, error) {
@@ -102,6 +102,7 @@ func buildConnectionString(dbConfig *Config) string {
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.DBName, opts)
 }
 
-func NewGORMDatabaseModule(options *Options) GORMDatabaseModule {
-	return GORMDatabaseModule{options: options}
+func NewGORMDatabaseModule(name string, options *Options) GORMDatabaseModule {
+	mName := fmt.Sprintf("GORM DB %s", name)
+	return GORMDatabaseModule{Base: module.Base{Name: mName, IncludesInit: true}, options: options}
 }

@@ -71,11 +71,13 @@ func doRun(cmd *cobra.Command, args []string) {
 	errs, ctx := errgroup.WithContext(ctx)
 
 	for i := range modules {
-		f := func() error {
-			return modules[i].Start(ctx)
+		if modules[i].HasInit() {
+			f := func() error {
+				return modules[i].Init(ctx)
+			}
+			errs.Go(f)
+			time.Sleep(1 * time.Second)
 		}
-		errs.Go(f)
-		time.Sleep(1 * time.Second)
 	}
 
 	err = errs.Wait()
@@ -90,7 +92,9 @@ func doRun(cmd *cobra.Command, args []string) {
 	}
 
 	for i := range modules {
-		modules[i].Cleanup()
+		if modules[i].HasCleanup() {
+			modules[i].Cleanup(ctx)
+		}
 	}
 
 	slog.Info("All modules shut down, quitting")

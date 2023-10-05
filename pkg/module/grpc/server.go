@@ -10,6 +10,8 @@ import (
 
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+
+	"github.com/dnikishov/microboiler/pkg/module"
 )
 
 type RegistryEntry struct {
@@ -22,12 +24,13 @@ type Options struct {
 }
 
 type GRPCServerModule struct {
+	module.Base
 	server  *grpc.Server
 	options *Options
 	ctx     context.Context
 }
 
-func (p *GRPCServerModule) Start(ctx context.Context) error {
+func (p *GRPCServerModule) Init(ctx context.Context) error {
 	listenAddress := viper.GetString("grpc.listenAddress")
 
 	if listenAddress == "" {
@@ -44,7 +47,7 @@ func (p *GRPCServerModule) Start(ctx context.Context) error {
 	return p.startServer(listenAddress)
 }
 
-func (p *GRPCServerModule) Cleanup() {
+func (p *GRPCServerModule) Cleanup(_ context.Context) {
 	slog.Info("Stopping GRPC server")
 	p.server.Stop()
 }
@@ -83,6 +86,7 @@ func (p *GRPCServerModule) registerServices() {
 	}
 }
 
-func NewGRPCServerModule(options *Options) GRPCServerModule {
-	return GRPCServerModule{options: options}
+func NewGRPCServerModule(name string, options *Options) GRPCServerModule {
+	mName := fmt.Sprintf("GRPC server %s", name)
+	return GRPCServerModule{Base: module.Base{Name: mName, IncludesInit: true, IncludesCleanup: true}, options: options}
 }
