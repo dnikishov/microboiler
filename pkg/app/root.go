@@ -90,21 +90,27 @@ func doRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	mainDoneCh := make(chan bool, 1)
+	go func() {
+		err = errs.Wait()
+		if err != nil {
+			slog.Error("Failed to run modules", "error", err)
+			os.Exit(1)
+		}
+		mainDoneCh <- true
+	}()
+
 	select {
 	case <-signalCh:
-		slog.Info("Shutting down app")
+		slog.Info("Got a signal, shutting down app")
+	case <-mainDoneCh:
+		slog.Info("Main completed, shutting down app")
 	}
 
 	for i := range modules {
 		if modules[i].HasCleanup() {
 			modules[i].Cleanup(ctx)
 		}
-	}
-
-	err = errs.Wait()
-	if err != nil {
-		slog.Error("Failed to run modules", "error", err)
-		os.Exit(1)
 	}
 
 	slog.Info("All modules shut down, quitting")
