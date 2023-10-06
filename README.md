@@ -1,2 +1,2 @@
 # microboiler
-Simple boilerplate for microservices
+Simple boilerplate for apps
