@@ -72,5 +72,5 @@ func (p *GRPCServerModule) registerServices() {
 }
 
 func NewGRPCServerModule(name string, options *Options) GRPCServerModule {
-	return GRPCServerModule{Base: module.Base{Name: name, IncludesInit: true, IncludesCleanup: true}, options: options}
+	return GRPCServerModule{Base: module.Base{Name: name, IncludesInit: true, IncludesCleanup: true, IncludesMain: true}, options: options}
 }
