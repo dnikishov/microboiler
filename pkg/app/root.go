@@ -90,12 +90,6 @@ func doRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	err = errs.Wait()
-	if err != nil {
-		slog.Error("Failed to run modules", "error", err)
-		os.Exit(1)
-	}
-
 	select {
 	case <-signalCh:
 		slog.Info("Shutting down app")
@@ -105,6 +99,12 @@ func doRun(cmd *cobra.Command, args []string) {
 		if modules[i].HasCleanup() {
 			modules[i].Cleanup(ctx)
 		}
+	}
+
+	err = errs.Wait()
+	if err != nil {
+		slog.Error("Failed to run modules", "error", err)
+		os.Exit(1)
 	}
 
 	slog.Info("All modules shut down, quitting")
