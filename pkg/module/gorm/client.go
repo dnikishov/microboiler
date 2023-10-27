@@ -14,6 +14,19 @@ import (
 	"github.com/dnikishov/microboiler/pkg/module"
 )
 
+var (
+	logLevels map[string]logger.LogLevel
+)
+
+func init() {
+	logLevels = map[string]logger.LogLevel{
+		"silent": logger.Silent,
+		"info":   logger.Info,
+		"warn":   logger.Warn,
+		"error":  logger.Error,
+	}
+}
+
 type MigrationFunc = func(db *gorm.DB)
 
 type Config struct {
@@ -22,6 +35,7 @@ type Config struct {
 	Username string
 	Password string
 	Options  map[string]string
+	LogLevel string
 }
 
 type Options struct {
@@ -43,7 +57,9 @@ func (p *GORMDatabaseModule) Init(_ context.Context) error {
 
 	connectionString := buildConnectionString(dbConfig)
 
-	p.db, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	// already sanitized
+	logLevel, _ := logLevels[dbConfig.LogLevel]
+	p.db, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{Logger: logger.Default.LogMode(logLevel)})
 
 	if err != nil {
 		return fmt.Errorf("Failed to initialize DB module: %s", err)
@@ -70,6 +86,7 @@ func (p *GORMDatabaseModule) loadConfigFromViper() (*Config, error) {
 	username := viper.GetString(fmt.Sprintf("%s.username", configPrefix))
 	password := viper.GetString(fmt.Sprintf("%s.password", configPrefix))
 	options := viper.GetStringMapString(fmt.Sprintf("%s.options", configPrefix))
+	logLevel := viper.GetString(fmt.Sprintf("%s.logLevel", configPrefix))
 
 	if host == "" {
 		return nil, fmt.Errorf("Invalid configuration: %s.host is not set", configPrefix)
@@ -87,11 +104,18 @@ func (p *GORMDatabaseModule) loadConfigFromViper() (*Config, error) {
 		return nil, fmt.Errorf("Invalid configuration: %s.password is not set", configPrefix)
 	}
 
+	if logLevel == "" {
+		logLevel = "silent"
+	} else if _, ok := logLevels[logLevel]; !ok {
+		return nil, fmt.Errorf("Invalid configuration: invalid log level %s", logLevel)
+	}
+
 	return &Config{Host: host,
 		DBName:   dbName,
 		Username: username,
 		Password: password,
-		Options:  options}, nil
+		Options:  options,
+		LogLevel: logLevel}, nil
 }
 
 func buildConnectionString(dbConfig *Config) string {
