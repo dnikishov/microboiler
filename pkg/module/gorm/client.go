@@ -34,7 +34,7 @@ type Config struct {
 	DBName   string
 	Username string
 	Password string
-	Options  map[string]string
+	Options  []string
 	LogLevel string
 }
 
@@ -85,7 +85,7 @@ func (p *GORMDatabaseModule) loadConfigFromViper() (*Config, error) {
 	dbName := viper.GetString(fmt.Sprintf("%s.name", configPrefix))
 	username := viper.GetString(fmt.Sprintf("%s.username", configPrefix))
 	password := viper.GetString(fmt.Sprintf("%s.password", configPrefix))
-	options := viper.GetStringMapString(fmt.Sprintf("%s.options", configPrefix))
+	options := viper.GetStringSlice(fmt.Sprintf("%s.options", configPrefix))
 	logLevel := viper.GetString(fmt.Sprintf("%s.logLevel", configPrefix))
 
 	if host == "" {
@@ -119,11 +119,7 @@ func (p *GORMDatabaseModule) loadConfigFromViper() (*Config, error) {
 }
 
 func buildConnectionString(dbConfig *Config) string {
-	var optsList []string
-	for opt, val := range dbConfig.Options {
-		optsList = append(optsList, fmt.Sprintf("%s=%s", opt, val))
-	}
-	opts := strings.Join(optsList, "&")
+	opts := strings.Join(dbConfig.Options, "&")
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.DBName, opts)
 }
 
