@@ -41,6 +41,11 @@ func Init(conf *Config) {
 
 func RegisterModule(p module.Module) {
 	modules = append(modules, p)
+
+	for _, taskConfig := range p.PeriodicTasks() {
+		task := module.NewTask(taskConfig.Name, taskConfig.Task, taskConfig.Interval)
+		modules = append(modules, &task)
+	}
 }
 
 func doRun(cmd *cobra.Command, args []string) {
