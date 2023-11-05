@@ -72,7 +72,7 @@ func doRun(cmd *cobra.Command, args []string) {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 
-	ctx := context.Background()
+	ctx, cancelFunc := context.WithCancel(context.Background())
 	errs, ctx := errgroup.WithContext(ctx)
 
 	for i := range modules {
@@ -108,6 +108,8 @@ func doRun(cmd *cobra.Command, args []string) {
 	select {
 	case <-signalCh:
 		slog.Info("Got a signal, shutting down app")
+		cancelFunc()
+
 	case <-mainDoneCh:
 		slog.Info("Main completed, shutting down app")
 	}
