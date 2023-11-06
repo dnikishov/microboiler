@@ -90,6 +90,7 @@ mainLoop:
 		}
 	}
 
+	slog.Info("Periodic task stopped", "name", p.GetName())
 	return nil
 }
 
