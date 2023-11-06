@@ -86,10 +86,10 @@ func (p *PrometheusExporterModule) Main(_ context.Context) error {
 	slog.Info("Starting prometheus exporter", "name", p.GetName(), "address", p.config.ListenAddress)
 	p.server = &http.Server{Addr: p.config.ListenAddress, Handler: p.serveMux}
 	err := p.server.ListenAndServe()
-	if err != nil {
+	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
-	slog.Info("Prometheus exporter is running", "name", p.GetName(), "address", p.config.ListenAddress)
+	slog.Info("Prometheus exporter stopped", "name", p.GetName(), "address", p.config.ListenAddress)
 	return nil
 }
 
