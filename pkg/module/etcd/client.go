@@ -15,9 +15,10 @@ import (
 type EtcdClientModule struct {
 	module.Base
 	client *client.Client
+	cfg client.Config
 }
 
-func (p *EtcdClientModule) Init(_ context.Context) error {
+func (p *EtcdClientModule) Configure() error {
 	configPrefix := fmt.Sprintf("etcd-%s", p.GetName())
 	endpoints := viper.GetStringSlice(fmt.Sprintf("%s.endpoints", configPrefix))
 
@@ -25,14 +26,17 @@ func (p *EtcdClientModule) Init(_ context.Context) error {
 		return fmt.Errorf("Invalid configuration: missing `endpoints` configuration")
 	}
 
-	cfg := client.Config{
+	p.cfg = client.Config{
 		Endpoints:   endpoints,
 		DialTimeout: 2 * time.Second,
 	}
 
-	var err error
+	return nil
+}
 
-	p.client, err = client.New(cfg)
+func (p *EtcdClientModule) Init(_ context.Context) error {
+	var err error
+	p.client, err = client.New(p.cfg)
 	if err != nil {
 		slog.Error("Failed to initialize Etcd client", "name", p.GetName(), "error", err)
 		return err
@@ -47,8 +51,8 @@ func (p *EtcdClientModule) Cleanup(_ context.Context) {
 	}
 }
 
-func NewEtcdClientModule(name string) EtcdClientModule {
-	return EtcdClientModule{Base: module.Base{Name: name, IncludesInit: true}}
+func NewEtcdClientModule(name string) *EtcdClientModule {
+	return &EtcdClientModule{Base: module.Base{Name: name, IncludesInit: true}}
 }
 
 func (p *EtcdClientModule) GetClient() *client.Client {
