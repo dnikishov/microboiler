@@ -41,12 +41,6 @@ type PrometheusExporterModule struct {
 }
 
 func (p *PrometheusExporterModule) Init(_ context.Context) error {
-	err := p.loadConfigFromViper()
-
-	if err != nil {
-		return err
-	}
-
 	p.registry = prometheus.NewRegistry()
 
 	for _, def := range p.options.CollectorDefinitions {
@@ -93,7 +87,7 @@ func (p *PrometheusExporterModule) Main(_ context.Context) error {
 	return nil
 }
 
-func (p *PrometheusExporterModule) loadConfigFromViper() error {
+func (p *PrometheusExporterModule) Configure() error {
 	configPrefix := fmt.Sprintf("prometheus-exporter-%s", p.GetName())
 
 	metricsPath := viper.GetString(fmt.Sprintf("%s.metrics_path", configPrefix))
@@ -128,6 +122,6 @@ func (p *PrometheusExporterModule) Cleanup(ctx context.Context) {
 	p.server.Shutdown(ctx)
 }
 
-func NewPrometheusExporterModule(name string, options *Options) PrometheusExporterModule {
-	return PrometheusExporterModule{Base: module.Base{Name: name, IncludesInit: true, IncludesMain: true, IncludesCleanup: true}, options: options}
+func NewPrometheusExporterModule(name string, options *Options) *PrometheusExporterModule {
+	return &PrometheusExporterModule{Base: module.Base{Name: name, IncludesInit: true, IncludesMain: true, IncludesCleanup: true}, options: options}
 }
