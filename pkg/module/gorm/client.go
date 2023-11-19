@@ -44,22 +44,35 @@ type Options struct {
 
 type GORMDatabaseModule struct {
 	module.Base
-	db      *gorm.DB
-	options *Options
+	db               *gorm.DB
+	options          *Options
+	connectionString string
+	logLevel         logger.LogLevel
 }
 
-func (p *GORMDatabaseModule) Init(_ context.Context) error {
+func (p *GORMDatabaseModule) Configure() error {
 	dbConfig, err := p.loadConfigFromViper()
 
 	if err != nil {
 		return err
 	}
 
-	connectionString := buildConnectionString(dbConfig)
-
+	p.connectionString = buildConnectionString(dbConfig)
 	// already sanitized
 	logLevel, _ := logLevels[dbConfig.LogLevel]
-	p.db, err = gorm.Open(mysql.Open(connectionString), &gorm.Config{Logger: logger.Default.LogMode(logLevel)})
+	p.logLevel = logLevel
+
+	return nil
+}
+
+func (p *GORMDatabaseModule) Init(_ context.Context) error {
+	var err error
+	p.db, err = gorm.Open(
+		mysql.Open(p.connectionString),
+		&gorm.Config{
+			Logger: logger.Default.LogMode(p.logLevel),
+		},
+	)
 
 	if err != nil {
 		return fmt.Errorf("Failed to initialize DB module: %s", err)
@@ -123,6 +136,6 @@ func buildConnectionString(dbConfig *Config) string {
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?%s", dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.DBName, opts)
 }
 
-func NewGORMDatabaseModule(name string, options *Options) GORMDatabaseModule {
-	return GORMDatabaseModule{Base: module.Base{Name: name, IncludesInit: true}, options: options}
+func NewGORMDatabaseModule(name string, options *Options) *GORMDatabaseModule {
+	return &GORMDatabaseModule{Base: module.Base{Name: name, IncludesInit: true}, options: options}
 }
