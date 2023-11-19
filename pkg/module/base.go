@@ -20,6 +20,7 @@ type Module interface {
 	HasCleanup() bool
 	HasMain() bool
 
+	Configure() error
 	Init(ctx context.Context) error
 	Main(ctx context.Context) error
 	Cleanup(ctx context.Context)
@@ -48,6 +49,10 @@ func (m Base) HasCleanup() bool {
 
 func (m Base) HasMain() bool {
 	return m.IncludesMain
+}
+
+func (m *Base) Configure() error {
+	return nil
 }
 
 func (m Base) Init(_ context.Context) error {
@@ -94,6 +99,13 @@ mainLoop:
 	return nil
 }
 
-func NewTask(name string, task TaskFunc, interval time.Duration) Task {
-	return Task{Base: Base{Name: name, IncludesMain: true}, task: task, interval: interval}
+func MustConfigure(mod Module) {
+	err := mod.Configure()
+	if err != nil {
+		panic(fmt.Sprintf("Configuration failed for %T %s: %s", mod, mod.GetName(), err))
+	}
+}
+
+func NewTask(name string, task TaskFunc, interval time.Duration) *Task {
+	return &Task{Base: Base{Name: name, IncludesMain: true}, task: task, interval: interval}
 }

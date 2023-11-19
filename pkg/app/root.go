@@ -44,7 +44,7 @@ func RegisterModule(p module.Module) {
 
 	for _, taskConfig := range p.PeriodicTasks() {
 		task := module.NewTask(taskConfig.Name, taskConfig.Task, taskConfig.Interval)
-		modules = append(modules, &task)
+		modules = append(modules, task)
 	}
 }
 
@@ -74,6 +74,10 @@ func doRun(cmd *cobra.Command, args []string) {
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	errs, ctx := errgroup.WithContext(ctx)
+
+	for i := range modules {
+		module.MustConfigure(modules[i])
+	}
 
 	for i := range modules {
 		if modules[i].HasInit() {
