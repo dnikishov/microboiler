@@ -112,6 +112,7 @@ func doRun(cmd *cobra.Command, args []string) {
 
 	case <-mainDoneCh:
 		slog.Info("Main completed, shutting down app")
+		cancelFunc()
 	}
 
 	for i := range modules {
