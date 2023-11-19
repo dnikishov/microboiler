@@ -29,7 +29,7 @@ type GRPCServerModule struct {
 	listenAddress string
 }
 
-func (p *GRPCServerModule) Init(ctx context.Context) error {
+func (p *GRPCServerModule) Configure() error {
 	configPrefix := fmt.Sprintf("grpc-%s", p.GetName())
 	listenAddress := viper.GetString(fmt.Sprintf("%s.listenAddress", configPrefix))
 
@@ -37,10 +37,15 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 		return fmt.Errorf("Invalid configuration: %s.listenAddress is not set", configPrefix)
 	}
 
+	p.listenAddress = listenAddress
+
+	return nil
+}
+
+func (p *GRPCServerModule) Init(ctx context.Context) error {
 	p.ctx = ctx
 	p.server = grpc.NewServer()
 	p.registerServices()
-	p.listenAddress = listenAddress
 
 	slog.Info("GRPC server initialized", "name", p.GetName(), "address", p.listenAddress)
 
@@ -70,6 +75,6 @@ func (p *GRPCServerModule) registerServices() {
 	}
 }
 
-func NewGRPCServerModule(name string, options *Options) GRPCServerModule {
-	return GRPCServerModule{Base: module.Base{Name: name, IncludesInit: true, IncludesCleanup: true, IncludesMain: true}, options: options}
+func NewGRPCServerModule(name string, options *Options) *GRPCServerModule {
+	return &GRPCServerModule{Base: module.Base{Name: name, IncludesInit: true, IncludesCleanup: true, IncludesMain: true}, options: options}
 }
