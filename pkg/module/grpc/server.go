@@ -39,11 +39,10 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 
 	p.ctx = ctx
 	p.server = grpc.NewServer()
-
-	slog.Info("GRPC server initialized", "name", p.GetName())
-
 	p.registerServices()
 	p.listenAddress = listenAddress
+
+	slog.Info("GRPC server initialized", "name", p.GetName(), "address", p.listenAddress)
 
 	return nil
 }
