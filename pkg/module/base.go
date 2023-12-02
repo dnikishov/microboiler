@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type Configurable interface {
+	Configure() error
+}
+
 type TaskConfig struct {
 	Name     string
 	Task     TaskFunc

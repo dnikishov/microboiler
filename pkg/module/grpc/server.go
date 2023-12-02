@@ -39,6 +39,17 @@ func (p *GRPCServerModule) Configure() error {
 
 	p.listenAddress = listenAddress
 
+	for _, entry := range p.options.ServiceRegistry {
+		configurableSvc, ok := entry.Service.(module.Configurable)
+		if ok {
+			slog.Info("Configuring GRPC service", "name", p.GetName(), "service", fmt.Sprintf("%T", entry.Service))
+			err := configurableSvc.Configure()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
