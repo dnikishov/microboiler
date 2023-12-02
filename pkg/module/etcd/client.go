@@ -15,20 +15,30 @@ import (
 type EtcdClientModule struct {
 	module.Base
 	client *client.Client
-	cfg client.Config
+	cfg    client.Config
 }
 
 func (p *EtcdClientModule) Configure() error {
 	configPrefix := fmt.Sprintf("etcd-%s", p.GetName())
 	endpoints := viper.GetStringSlice(fmt.Sprintf("%s.endpoints", configPrefix))
+	maxCallSendMsgSize := viper.GetInt(fmt.Sprintf("%s.max_call_send_msg_size", configPrefix))
 
 	if len(endpoints) == 0 {
 		return fmt.Errorf("Invalid configuration: missing `endpoints` configuration")
 	}
 
+	if maxCallSendMsgSize == 0 {
+		maxCallSendMsgSize = 2097152
+	}
+
+	if maxCallSendMsgSize < 0 {
+		return fmt.Errorf("Invalid configuration: %s.max_call_send_msg_size can't be less than 0", configPrefix)
+	}
+
 	p.cfg = client.Config{
-		Endpoints:   endpoints,
-		DialTimeout: 2 * time.Second,
+		Endpoints:          endpoints,
+		DialTimeout:        2 * time.Second,
+		MaxCallSendMsgSize: maxCallSendMsgSize,
 	}
 
 	return nil
