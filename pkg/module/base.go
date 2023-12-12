@@ -11,6 +11,10 @@ type Configurable interface {
 	Configure() error
 }
 
+type WithPeriodicTasks interface {
+	PeriodicTasks() []*TaskConfig
+}
+
 type TaskConfig struct {
 	Name     string
 	Task     TaskFunc
@@ -28,8 +32,6 @@ type Module interface {
 	Init(ctx context.Context) error
 	Main(ctx context.Context) error
 	Cleanup(ctx context.Context)
-
-	PeriodicTasks() []*TaskConfig
 }
 
 type Base struct {
@@ -69,10 +71,6 @@ func (m Base) Main(_ context.Context) error {
 
 func (m Base) Cleanup(_ context.Context) {
 	panic(fmt.Sprintf("Cleanup is not implemented in %s", m.GetName()))
-}
-
-func (m Base) PeriodicTasks() []*TaskConfig {
-	return []*TaskConfig{}
 }
 
 type TaskFunc = func()
