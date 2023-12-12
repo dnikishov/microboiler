@@ -6,6 +6,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
+	go.etcd.io/etcd/client/v3 v3.5.10
 	golang.org/x/sync v0.3.0
 	google.golang.org/grpc v1.58.3
 	gorm.io/driver/mysql v1.5.1
@@ -39,7 +40,6 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.10 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.10 // indirect
-	go.etcd.io/etcd/client/v3 v3.5.10 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
