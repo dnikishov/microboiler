@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -44,7 +45,11 @@ func RegisterModule(p module.Module) {
 
 	withPeriodicTasks, ok := p.(module.WithPeriodicTasks)
 	if ok {
-		for _, taskConfig := range withPeriodicTasks.PeriodicTasks() {
+		periodicTasks := withPeriodicTasks.PeriodicTasks()
+		slog.Info("Module supports periodic tasks", "module", fmt.Sprintf("%T", p), "count", len(periodicTasks))
+		for i := range withPeriodicTasks.PeriodicTasks() {
+			taskConfig := periodicTasks[i]
+			slog.Info("Registering task for module", "module", fmt.Sprintf("%T", p), "task", taskConfig.Name, "interval", taskConfig.Interval)
 			task := module.NewTask(taskConfig.Name, taskConfig.Task, taskConfig.Interval)
 			modules = append(modules, task)
 		}
