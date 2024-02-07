@@ -87,12 +87,22 @@ func doRun(cmd *cobra.Command, args []string) {
 		module.MustConfigure(modules[i])
 	}
 
+	// Run init + first iteration of periodic tasks if any
 	for i := range modules {
 		if modules[i].HasInit() {
 			err := modules[i].Init(ctx)
 			if err != nil {
 				slog.Error("Failed to initialize module", "name", modules[i].GetName(), "error", err)
 				os.Exit(1)
+			}
+		}
+
+		withPeriodicTasks, ok := modules[i].(module.WithPeriodicTasks)
+		if ok {
+			periodicTasks := withPeriodicTasks.PeriodicTasks()
+			for j := range periodicTasks {
+				slog.Info("Running initial iteration of periodic task for module", "name", modules[i].GetName(), "task", periodicTasks[j].Name)
+				periodicTasks[j].Task()
 			}
 		}
 	}
