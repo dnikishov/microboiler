@@ -84,6 +84,7 @@ func (p *GRPCServerModule) Main(_ context.Context) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("Starting GRPC server", "name", p.GetName(), "address", p.listenAddress)
 	err = p.server.Serve(listener)
 	if err != nil {
 		return err
