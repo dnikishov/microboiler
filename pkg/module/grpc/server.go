@@ -34,7 +34,7 @@ func (p *GRPCServerModule) Configure() error {
 	listenAddress := viper.GetString(fmt.Sprintf("%s.listenAddress", configPrefix))
 
 	if listenAddress == "" {
-		return fmt.Errorf("Invalid configuration: %s.listenAddress is not set", configPrefix)
+		return fmt.Errorf("invalid configuration: %s.listenAddress is not set", configPrefix)
 	}
 
 	p.listenAddress = listenAddress
@@ -51,6 +51,22 @@ func (p *GRPCServerModule) Configure() error {
 	}
 
 	return nil
+}
+
+func (p *GRPCServerModule) PeriodicTasks() []*module.TaskConfig {
+	tasks := make([]*module.TaskConfig, 0)
+
+	for i := range p.options.ServiceRegistry {
+		entry := p.options.ServiceRegistry[i]
+		withPeriodicTasksSvc, ok := entry.Service.(module.WithPeriodicTasks)
+		if ok {
+			periodicTasks := withPeriodicTasksSvc.PeriodicTasks()
+			slog.Info("GRPC service supports periodic tasks", "service", fmt.Sprintf("%T", entry.Service), "count", len(periodicTasks))
+			tasks = append(tasks, periodicTasks...)
+		}
+	}
+
+	return tasks
 }
 
 func (p *GRPCServerModule) Init(ctx context.Context) error {
