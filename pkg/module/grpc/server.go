@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/dnikishov/microboiler/pkg/module"
 )
@@ -25,13 +26,24 @@ type Options struct {
 
 type GRPCServerModule struct {
 	module.Base
-	server        *grpc.Server
-	options       *Options
-	ctx           context.Context
-	listenAddress string
-	exportMetrics bool
+	server          *grpc.Server
+	options         *Options
+	ctx             context.Context
+	listenAddress   string
+	exportMetrics   bool
+	keepaliveParams keepalive.ServerParameters
 
 	Metrics *grpcprom.ServerMetrics
+}
+
+func (p *GRPCServerModule) parseKeepaliveParams() {
+	configPrefix := fmt.Sprintf("grpc-%s", p.GetName())
+
+	p.keepaliveParams.MaxConnectionIdle = viper.GetDuration(fmt.Sprintf("%s.keepalive.maxConnectionIdle", configPrefix))
+	p.keepaliveParams.MaxConnectionAge = viper.GetDuration(fmt.Sprintf("%s.keepalive.maxConnectionAge", configPrefix))
+	p.keepaliveParams.MaxConnectionAgeGrace = viper.GetDuration(fmt.Sprintf("%s.keepalive.maxConnectionAgeGrace", configPrefix))
+	p.keepaliveParams.Time = viper.GetDuration(fmt.Sprintf("%s.keepalive.time", configPrefix))
+	p.keepaliveParams.Timeout = viper.GetDuration(fmt.Sprintf("%s.keepalive.timeout", configPrefix))
 }
 
 func (p *GRPCServerModule) Configure() error {
@@ -45,6 +57,8 @@ func (p *GRPCServerModule) Configure() error {
 
 	p.listenAddress = listenAddress
 	p.exportMetrics = exportMetrics
+
+	p.parseKeepaliveParams()
 
 	for _, entry := range p.options.ServiceRegistry {
 		configurableSvc, ok := entry.Service.(module.Configurable)
@@ -78,7 +92,7 @@ func (p *GRPCServerModule) PeriodicTasks() []*module.TaskConfig {
 
 func (p *GRPCServerModule) Init(ctx context.Context) error {
 	p.ctx = ctx
-	serverOptions := []grpc.ServerOption{}
+	serverOptions := []grpc.ServerOption{grpc.KeepaliveParams(p.keepaliveParams)}
 	unaryInterceptors := []grpc.UnaryServerInterceptor{}
 	streamInterceptors := []grpc.StreamServerInterceptor{}
 
