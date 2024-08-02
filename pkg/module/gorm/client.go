@@ -70,7 +70,8 @@ func (p *GORMDatabaseModule) Init(_ context.Context) error {
 	p.db, err = gorm.Open(
 		mysql.Open(p.connectionString),
 		&gorm.Config{
-			Logger: logger.Default.LogMode(p.logLevel),
+			Logger:         logger.Default.LogMode(p.logLevel),
+			TranslateError: true,
 		},
 	)
 
