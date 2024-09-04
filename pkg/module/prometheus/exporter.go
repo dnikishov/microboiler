@@ -3,13 +3,14 @@ package prometheus
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/spf13/viper"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/dnikishov/microboiler/pkg/module"
 )
@@ -44,7 +45,7 @@ func (p *PrometheusExporterModule) Init(_ context.Context) error {
 	p.registry = prometheus.NewRegistry()
 
 	for _, def := range p.options.CollectorDefinitions {
-		slog.Info("Registering collector", "name", p.GetName(), "collector_name", def.Name)
+		log.Info("Registering collector", "name", p.GetName(), "collector_name", def.Name)
 		p.registry.MustRegister(def.Collector)
 	}
 
@@ -77,13 +78,13 @@ func (p *PrometheusExporterModule) Init(_ context.Context) error {
 }
 
 func (p *PrometheusExporterModule) Main(_ context.Context) error {
-	slog.Info("Starting prometheus exporter", "name", p.GetName(), "address", p.config.ListenAddress)
+	log.Info("Starting prometheus exporter", "name", p.GetName(), "address", p.config.ListenAddress)
 	p.server = &http.Server{Addr: p.config.ListenAddress, Handler: p.serveMux}
 	err := p.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
-	slog.Info("Prometheus exporter stopped", "name", p.GetName(), "address", p.config.ListenAddress)
+	log.Info("Prometheus exporter stopped", "name", p.GetName(), "address", p.config.ListenAddress)
 	return nil
 }
 
@@ -118,7 +119,7 @@ func (p *PrometheusExporterModule) Configure() error {
 }
 
 func (p *PrometheusExporterModule) Cleanup(ctx context.Context) {
-	slog.Info("Stopping prometheus exporter", "name", p.GetName())
+	log.Info("Stopping prometheus exporter", "name", p.GetName())
 	p.server.Shutdown(ctx)
 }
 

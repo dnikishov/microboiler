@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net"
 
+	"github.com/charmbracelet/log"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
@@ -63,7 +63,7 @@ func (p *GRPCServerModule) Configure() error {
 	for _, entry := range p.options.ServiceRegistry {
 		configurableSvc, ok := entry.Service.(module.Configurable)
 		if ok {
-			slog.Info("Configuring GRPC service", "name", p.GetName(), "service", fmt.Sprintf("%T", entry.Service))
+			log.Info("Configuring GRPC service", "name", p.GetName(), "service", fmt.Sprintf("%T", entry.Service))
 			err := configurableSvc.Configure()
 			if err != nil {
 				return err
@@ -82,7 +82,7 @@ func (p *GRPCServerModule) PeriodicTasks() []*module.TaskConfig {
 		withPeriodicTasksSvc, ok := entry.Service.(module.WithPeriodicTasks)
 		if ok {
 			periodicTasks := withPeriodicTasksSvc.PeriodicTasks()
-			slog.Info("GRPC service supports periodic tasks", "service", fmt.Sprintf("%T", entry.Service), "count", len(periodicTasks))
+			log.Info("GRPC service supports periodic tasks", "service", fmt.Sprintf("%T", entry.Service), "count", len(periodicTasks))
 			tasks = append(tasks, periodicTasks...)
 		}
 	}
@@ -121,7 +121,7 @@ func (p *GRPCServerModule) Init(ctx context.Context) error {
 	p.server = grpc.NewServer(serverOptions...)
 	p.registerServices()
 
-	slog.Info("GRPC server initialized", "name", p.GetName(), "address", p.listenAddress)
+	log.Info("GRPC server initialized", "name", p.GetName(), "address", p.listenAddress)
 
 	return nil
 }
@@ -131,7 +131,7 @@ func (p *GRPCServerModule) Main(_ context.Context) error {
 	if err != nil {
 		return err
 	}
-	slog.Info("Starting GRPC server", "name", p.GetName(), "address", p.listenAddress)
+	log.Info("Starting GRPC server", "name", p.GetName(), "address", p.listenAddress)
 	err = p.server.Serve(listener)
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func (p *GRPCServerModule) Main(_ context.Context) error {
 }
 
 func (p *GRPCServerModule) Cleanup(_ context.Context) {
-	slog.Info("Stopping GRPC server", "name", p.GetName())
+	log.Info("Stopping GRPC server", "name", p.GetName())
 	p.server.Stop()
 }
 

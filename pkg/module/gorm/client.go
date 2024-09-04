@@ -3,9 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -83,7 +83,7 @@ func (p *GORMDatabaseModule) Init(_ context.Context) error {
 		migrationFunc(p.db)
 	}
 
-	slog.Info("GORM database module initialized", "name", p.GetName())
+	log.Info("GORM database module initialized", "name", p.GetName())
 
 	return nil
 }

@@ -3,9 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/spf13/viper"
 	client "go.etcd.io/etcd/client/v3"
 
@@ -48,7 +48,7 @@ func (p *EtcdClientModule) Init(_ context.Context) error {
 	var err error
 	p.client, err = client.New(p.cfg)
 	if err != nil {
-		slog.Error("Failed to initialize Etcd client", "name", p.GetName(), "error", err)
+		log.Error("Failed to initialize Etcd client", "name", p.GetName(), "error", err)
 		return err
 	}
 

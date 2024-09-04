@@ -3,8 +3,9 @@ package module
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 type Configurable interface {
@@ -82,7 +83,7 @@ type Task struct {
 }
 
 func (p *Task) Main(ctx context.Context) error {
-	slog.Info("Starting periodic task", "name", p.GetName())
+	log.Info("Starting periodic task", "name", p.GetName())
 
 	ticker := time.NewTicker(p.interval)
 	defer ticker.Stop()
@@ -97,7 +98,7 @@ mainLoop:
 		}
 	}
 
-	slog.Info("Periodic task stopped", "name", p.GetName())
+	log.Info("Periodic task stopped", "name", p.GetName())
 	return nil
 }
 

@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +10,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -46,10 +46,10 @@ func RegisterModule(p module.Module) {
 	withPeriodicTasks, ok := p.(module.WithPeriodicTasks)
 	if ok {
 		periodicTasks := withPeriodicTasks.PeriodicTasks()
-		slog.Info("Module supports periodic tasks", "module", fmt.Sprintf("%T", p), "count", len(periodicTasks))
+		log.Info("Module supports periodic tasks", "module", fmt.Sprintf("%T", p), "count", len(periodicTasks))
 		for i := range withPeriodicTasks.PeriodicTasks() {
 			taskConfig := periodicTasks[i]
-			slog.Info("Registering task for module", "module", fmt.Sprintf("%T", p), "task", taskConfig.Name, "interval", taskConfig.Interval)
+			log.Info("Registering task for module", "module", fmt.Sprintf("%T", p), "task", taskConfig.Name, "interval", taskConfig.Interval)
 			task := module.NewTask(taskConfig.Name, taskConfig.Task, taskConfig.Interval)
 			modules = append(modules, task)
 		}
@@ -61,10 +61,10 @@ func doRun(cmd *cobra.Command, args []string) {
 	var err error
 	config, err = cmd.Flags().GetString("config")
 	if err != nil {
-		slog.Error("Could not initialize config:", err)
+		log.Error("Could not initialize config:", err)
 		os.Exit(1)
 	} else if config == "" {
-		slog.Error("--config cannot be an empty string")
+		log.Error("--config cannot be an empty string")
 		os.Exit(1)
 	}
 
@@ -73,7 +73,7 @@ func doRun(cmd *cobra.Command, args []string) {
 	err = viper.ReadInConfig()
 
 	if err != nil {
-		slog.Error("Could not read config:", err)
+		log.Error("Could not read config:", err)
 		os.Exit(1)
 	}
 
@@ -92,7 +92,7 @@ func doRun(cmd *cobra.Command, args []string) {
 		if modules[i].HasInit() {
 			err := modules[i].Init(ctx)
 			if err != nil {
-				slog.Error("Failed to initialize module", "name", modules[i].GetName(), "error", err)
+				log.Error("Failed to initialize module", "name", modules[i].GetName(), "error", err)
 				os.Exit(1)
 			}
 		}
@@ -101,7 +101,7 @@ func doRun(cmd *cobra.Command, args []string) {
 		if ok {
 			periodicTasks := withPeriodicTasks.PeriodicTasks()
 			for j := range periodicTasks {
-				slog.Info("Running initial iteration of periodic task for module", "name", modules[i].GetName(), "task", periodicTasks[j].Name)
+				log.Info("Running initial iteration of periodic task for module", "name", modules[i].GetName(), "task", periodicTasks[j].Name)
 				periodicTasks[j].Task()
 			}
 		}
@@ -121,7 +121,7 @@ func doRun(cmd *cobra.Command, args []string) {
 	go func() {
 		err = errs.Wait()
 		if err != nil {
-			slog.Error("Failed to run modules", "error", err)
+			log.Error("Failed to run modules", "error", err)
 			os.Exit(1)
 		}
 		mainDoneCh <- true
@@ -129,11 +129,11 @@ func doRun(cmd *cobra.Command, args []string) {
 
 	select {
 	case <-signalCh:
-		slog.Info("Got a signal, shutting down app")
+		log.Info("Got a signal, shutting down app")
 		cancelFunc()
 
 	case <-mainDoneCh:
-		slog.Info("Main completed, shutting down app")
+		log.Info("Main completed, shutting down app")
 		cancelFunc()
 	}
 
@@ -143,7 +143,7 @@ func doRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	slog.Info("All modules shut down, quitting")
+	log.Info("All modules shut down, quitting")
 }
 
 func Execute() {

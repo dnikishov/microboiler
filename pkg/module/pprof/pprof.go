@@ -3,10 +3,10 @@ package pprof
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/charmbracelet/log"
 	"github.com/dnikishov/microboiler/pkg/module"
 	"github.com/spf13/viper"
 )
@@ -35,13 +35,13 @@ func (p *PprofModule) Init(_ context.Context) error {
 }
 
 func (p *PprofModule) Main(_ context.Context) error {
-	slog.Info("Starting pprof server", "name", p.GetName(), "address", p.config.ListenAddress)
+	log.Info("Starting pprof server", "name", p.GetName(), "address", p.config.ListenAddress)
 	p.server = &http.Server{Addr: p.config.ListenAddress, Handler: p.serveMux}
 	err := p.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
-	slog.Info("Pprof server stopped", "name", p.GetName(), "address", p.config.ListenAddress)
+	log.Info("Pprof server stopped", "name", p.GetName(), "address", p.config.ListenAddress)
 	return nil
 }
 
@@ -62,7 +62,7 @@ func (p *PprofModule) Configure() error {
 }
 
 func (p *PprofModule) Cleanup(ctx context.Context) {
-	slog.Info("Stopping pprof server", "name", p.GetName())
+	log.Info("Stopping pprof server", "name", p.GetName())
 	p.server.Shutdown(ctx)
 }
 
